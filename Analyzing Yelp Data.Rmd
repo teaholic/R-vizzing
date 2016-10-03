@@ -1,0 +1,327 @@
+---
+title: "Social Data Analytics"
+author: "Chiara Barbagianni"
+date: "September 30, 2016"
+output: html_document
+---
+
+## EDA
+
+```{r}
+setwd("~/DataScience/Yelp")
+library(ggplot2)
+```
+
+### Visualizing the data
+
+```{r}
+business_data <- read.csv(file='yelp_dataset_challenge_academic_dataset/yelp_academic_dataset_business.json.csv')
+str(business_data)
+```
+
+```{r}
+ggplot(business_data) + geom_bar(aes(x=state), fill='gray')
+```
+
+
+```{r}
+ggplot(business_data) + geom_bar(aes(x=stars), fill='gray')
+```
+
+```{r}
+summary(factor(business_data$stars))
+```
+
+
+```{r}
+library(RColorBrewer)
+ggplot(business_data, aes(x=stars)) + geom_bar() + scale_fill_brewer(palette='YlOrRd')
+```
+
+
+```{r}
+ggplot(data=business_data, aes(x=factor(1), fill=factor(stars))) + geom_bar(width=1) + coord_polar(theta='y')
+```
+
+
+### Correlations
+
+```{r}
+user_data <-read.csv('yelp_dataset_challenge_academic_dataset/yelp_academic_dataset_user.json.csv')
+str(user_data)
+```
+
+```{r}
+user_votes <- user_data[,c('cool_votes','funny_votes','useful_votes')]
+str(user_votes)
+```
+
+
+```{r}
+cor(user_data$funny_votes,user_data$fans)
+```
+
+
+### Regression
+
+```{r}
+my.lm <- lm(useful_votes ~ review_count + fans, data=user_data)
+coeffs <- coefficients(my.lm)
+coeffs
+```
+
+
+```{r}
+ggplot(user_data) + geom_bar(aes(x=review_count), fill='gray')
+```
+
+
+### Clustering
+
+```{r}
+userCluster <- kmeans(user_data[,c(3:6)],3)
+```
+
+```{r}
+ggplot(user_data,aes(review_count,fans,color=userCluster$cluster))+geom_point()
+```
+
+## Assignment
+
+```{r}
+par(mfrow=c(1,3))
+plot(user_data$cool_votes)
+plot(user_data$funny_votes)
+plot(user_data$useful_votes)
+```
+
+```{r}
+ggplot(user_data, aes(x=yelping_since))+geom_bar()
+```
+
+
+```{r}
+library(corrr)
+library(dplyr)
+```
+
+```{r}
+business_data[,c(9,10)] %>% correlate() %>% fashion()
+```
+
+```{r}
+user_data[,c(3:7,11)] %>% correlate() %>% fashion()
+```
+
+```{r}
+user_data[,c(3:7,11)] %>% correlate() %>% rearrange(absolute=FALSE, method='PCA') %>% rplot()
+```
+
+
+```{r}
+user_data[,c(3:7,11)] %>% correlate() %>% rearrange(absolute=FALSE, method='HC') %>% rplot()
+```
+
+```{r}
+# https://www.r-bloggers.com/correlation-network_plot-with-corrr/
+user_data[,c(3,5:7,11)] %>% correlate() %>% network_plot(min_cor=.1)
+```
+
+```{r}
+library(data.table)
+library(dplyr)
+library(purrr)
+library(tidyr)
+library(lubridate)
+library(countrycode)
+library(ggplot2)
+library(scales)
+library(gridExtra)
+library(ggthemes)
+library(viridis)
+library(knitr)
+```
+
+```{r}
+#data <- user_data[,c(10)]
+#data <- as.Date(data, '%Y-%m')
+#list <- strsplit(list, '-')
+#library('plyr')
+#df <- ldply(list)
+#colnames(df) <- c('Year', 'month')
+```
+
+```{r}
+#dates <- as.Date(data, '%Y-%m')
+#data$month <- dates[2]
+#data$year <- dates[1]
+```
+
+```{r}
+#ggplot(business_data, aes(x=review_count, y=stars, fill=n)) + geom_tile(color='white', size=.1) + scale_fill_viridis(name='#Stars', label=comma) + coord_equal() + labs(x=NULL, y=NULL, title='Stars per review') + theme_tufte(base_family='Helvetica') + theme(plot.title=element_text(hjust=0)) + theme(axis.ticks=element_blank()) + theme(axis.text=element_text(size=7)) + theme(legend.title=element_text(size=8)) + theme(legend.text=element_text(size=6))
+```
+
+```{r}
+businessCluster <- kmeans(business_data[,c(9,10)],3)
+ggplot(business_data, aes(stars, review_count, color=businessCluster$cluster)) + geom_point()
+```
+
+```{r}
+businessCluster <- kmeans(business_data[,c(10)],5)
+ggplot(business_data, aes(stars, review_count, color=businessCluster$cluster)) + geom_point() + 
+labs(x='Stars', y='Review count', title='Stars over Reviews') +
+theme_tufte(base_family='Helvetica') + theme(plot.title=element_text(hjust=0.5), axis.ticks=element_blank(), axis.text=element_text(size=7), legend.title=element_text(size=8), legend.text=element_text(size=6))
+```
+
+```{r}
+ggplot(business_data, aes(stars, review_count)) + geom_point() + 
+labs(x='Stars', y='Review count', title='Stars over Reviews') +
+theme_tufte(base_family='Helvetica') + theme(plot.title=element_text(hjust=0.5), axis.ticks=element_blank(), axis.text=element_text(size=7), legend.title=element_text(size=8), legend.text=element_text(size=6))
+```
+
+```{r}
+ggplot(business_data, aes(stars, review_count)) + geom_point(aes(color=factor(stars))) +  scale_color_viridis(option='viridis', discrete=TRUE) + theme_bw() +
+labs(x='Stars', y='Review count', title='Stars over Reviews', color='Stars') +
+theme_tufte(base_family='Helvetica') + theme(plot.title=element_text(hjust=0.5),
+axis.ticks=element_blank(), axis.text=element_text(size=7), legend.title=element_text(size=8), legend.text=element_text(size=6))
+```
+
+
+```{r}
+ggplot(business_data, aes(x=stars, y=review_count), color=businessCluster$cluster) + geom_jitter()
+```
+
+```{r}
+library(devtools)
+source_url('https://raw.githubusercontent.com/bearloga/Quartile-frame-Scatterplot/master/qfplot.R')
+qfplot(business_data$stars, business_data$review_count, xlab='Stars', ylab='Reviews', main='Star-Review Quartile-Frame Scatterplot', font.family='TNR')
+```
+
+```{r}
+par(mfrow=c(1,1))
+library(devtools)
+source_url("https://raw.githubusercontent.com/sjmurdoch/fancyaxis/master/fancyaxis.R")
+x = business_data$stars
+y = business_data$review_count
+plot(x, 
+     y, 
+     xlab='Stars', ylab='Reviews', 
+     main='Star-Review Rug Scatterplot',
+     font.family='TNR',
+     axes=FALSE, pch=16, cex=0.8,
+     xlim=c(min(x)-0.2, max(x)+0.2),
+     ylim=c(min(y)-1.5, max(y)+1.5))
+axis(1, tick=F)
+axis(2, tick=F, las=2)
+minimalrug(x, side=1, line=-0.8)
+minimalrug(y, side=2, line=-0.8)
+```
+
+```{r}
+library(ggplot2)
+library(ggthemes)
+ggplot(business_data, aes(stars, review_count)) + geom_point() + geom_rug() + theme_tufte(ticks=F) +
+labs(x='Stars', y='Review count', title='Stars over Reviews')
+```
+
+```{r}
+library(ggplot2)
+library(ggExtra)
+library(ggthemes)
+p <- ggplot(business_data, aes(stars, review_count)) + geom_point() +
+labs(x='Stars', y='Review count', title='Stars over Reviews')
+ggMarginal(p, type = "boxplot", size=10, fill="transparent")
+```
+
+```{r}
+clean_user <- read.csv(file='clean_data.csv')[,c(1,13,14)]
+str(clean_user)
+```
+
+```{r}
+summary(factor(clean_user$year))
+ggplot(clean_user, aes(year)) + geom_bar()
+```
+
+```{r}
+summary(factor(clean_user$month))
+ggplot(clean_user, aes(month)) + geom_bar()
+```
+
+```{r}
+winter = clean_user[clean_user['month']==c(12,1,2),] 
+spring =  clean_user[clean_user['month']==c(3,4,5),]
+summer = clean_user[clean_user['month']==c(6,7,8),]
+autumn = clean_user[clean_user['month']==c(9,10,11),]
+#seasons = data.frame(c(winter, spring, summer, autumn), nrow=3954, ncol=4, byrow=FALSE)
+```
+
+```{r}
+ggplot(winter, aes(year)) + geom_bar() + labs(x='Winters')
+ggplot(spring, aes(year)) + geom_bar() + labs(x='Springs')
+ggplot(summer, aes(year)) + geom_bar() + labs(x='Summers')
+ggplot(autumn, aes(year)) + geom_bar() + labs(x='Autumns')
+```
+
+```{r}
+
+library(ggplot2)
+library(viridis)
+library(season)
+library(gridExtra)
+```
+
+```{r}
+count <- count(clean_user, year, month)
+count
+```
+
+
+```{r}
+ggplot(count, aes(year, month, fill=n)) + 
+  geom_tile(colour="white", size=0.1) +
+  scale_fill_viridis(name='Registrations', label=comma) + coord_equal() +
+  scale_y_continuous(breaks=1:12, labels=month.abb[1:12]) +
+  labs(x=NULL, y=NULL, title="Yelp Sample Users Registration over Time") + theme_tufte(base_family='Helvetica') + theme(plot.title=element_text(hjust=0.5), axis.ticks=element_blank(), axis.text=element_text(size=7), legend.title=element_text(size=8), legend.text=element_text(size=6))
+```
+
+```{r}
+seasoner <- function(month) {if (month == 3 | month == 4 | month == 5) {return('spring')} else if (month == 6 | month == 7 | month == 8) {return('summer')} else if (month == 9 | month == 10 | month == 11) {return('autumn')} else {return('winter')}}
+```
+
+```{r}
+clean_user$season <- mapply(seasoner, clean_user$month)
+clean_user$season <- factor(clean_user$season, levels=c('spring', 'summer', 'autumn', 'winter'))
+```
+
+```{r}
+summary(factor(clean_user$season))
+ggplot(clean_user, aes(season, fill=factor(month, labels=c('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December')))) + geom_bar() + labs(x='Season', y='Registration count', title='User Registrations Seasonality', fill='Months') + #scale_fill_brewer(palette='YlOrRd') +
+theme_tufte(base_family='Helvetica') + theme(plot.title=element_text(hjust=0.5)) + theme(axis.ticks=element_blank()) + theme(axis.text=element_text(size=7)) + theme(legend.title=element_text(size=8)) + theme(legend.text=element_text(size=6))
+```
+
+```{r}
+summary(factor(clean_user$season))
+ggplot(clean_user, aes(season, fill=factor(month, labels=c('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December')))) + geom_bar() + labs(x='Season', y='Registration count', title='User Registrations Seasonality', fill='Months') + 
+scale_fill_brewer(palette='Set3') +
+# scale_fill_brewer(palette='Paired') +
+# scale_fill_viridis(option='C', discrete=TRUE) +
+theme_tufte(base_family='Helvetica') + theme(plot.title=element_text(hjust=0.5)) + theme(axis.ticks=element_blank()) + theme(axis.text=element_text(size=7)) + theme(legend.title=element_text(size=8)) + theme(legend.text=element_text(size=6))
+```
+
+```{r}
+clean_user[c('cool_votes','funny_votes','useful_votes')] <- user_data[,c('cool_votes','funny_votes','useful_votes')]
+```
+
+```{r}
+cor(clean_user$year, clean_user$cool_votes)
+cor(clean_user$year, clean_user$funny_votes)
+cor(clean_user$year, clean_user$useful_votes)
+```
+
+```{r}
+cor(clean_user$month, clean_user$cool_votes)
+cor(clean_user$month, clean_user$funny_votes)
+cor(clean_user$month, clean_user$useful_votes)
+```
+
