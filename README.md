@@ -1,4 +1,4 @@
 # R-vizzing
 ### A Yelp academic dataset playground 
 
-This repo showcases the work I have turned in for the Social Media Data Analytics on Coursera - plus some more raw scribbling.
+This repo shows the work I have turned in for the 3rd week assignment of the the Social Media Data Analytics class on Coursera - plus some more raw scribbling.
